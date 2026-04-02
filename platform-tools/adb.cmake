@@ -260,6 +260,11 @@ add_executable(adb
     ${SRC}/adb/client/incremental.cpp
     ${SRC}/adb/client/incremental_server.cpp
     ${SRC}/adb/client/incremental_utils.cpp
+    ${SRC}/adb/client/transport_emulator.cpp
+    ${SRC}/adb/client/detach.cpp
+    ${SRC}/adb/client/usb_libusb_hotplug.cpp
+    ${SRC}/adb/client/usb_libusb_device.cpp
+    ${SRC}/adb/client/usb_libusb_inhouse_hotplug.cpp
     ${SRC}/adb/shell_service_protocol.cpp
     ${ADB_PROTO_HDRS}
     )
