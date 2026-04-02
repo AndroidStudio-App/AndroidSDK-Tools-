@@ -65,7 +65,7 @@ jobs:
           python build.py \
             --ndk=${{ env.ANDROID_NDK_HOME }} \
             --abi=${{ github.event.inputs.abi }} \
-            --api=30 \
+            --api=35\
             --build=build/${{ github.event.inputs.abi }} \
             --protoc=${{ steps.protoc.outputs.path }} \
             --job=$(nproc)
