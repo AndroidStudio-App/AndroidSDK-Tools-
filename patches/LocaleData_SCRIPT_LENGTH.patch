@@ -1,7 +1,7 @@
-diff --git a/libs/androidfw/LocaleData.cpp b/libs/androidfw/LocaleData.cpp
+diff --git a/src/base/libs/androidfw/LocaleData.cpp b/src/base/libs/androidfw/LocaleData.cpp
 index 1b23d90c5..bcfb7f969 100644
---- a/libs/androidfw/LocaleData.cpp
-+++ b/libs/androidfw/LocaleData.cpp
+--- a/src/base/libs/androidfw/LocaleData.cpp
++++ b/src/base/libs/androidfw/LocaleData.cpp
 @@ -25,6 +25,8 @@
  #include <androidfw/LocaleData.h>
  #include <androidfw/LocaleDataLookup.h>
@@ -11,10 +11,10 @@ index 1b23d90c5..bcfb7f969 100644
  namespace android {
  
  const uint32_t PACKED_ROOT = 0; // to represent the root locale
-diff --git a/libs/androidfw/include/androidfw/LocaleDataLookup.h b/libs/androidfw/include/androidfw/LocaleDataLookup.h
+diff --git a/src/base/libs/androidfw/include/androidfw/LocaleDataLookup.h b/src/base/libs/androidfw/include/androidfw/LocaleDataLookup.h
 index 5a24e832b..be970f3ba 100644
---- a/libs/androidfw/include/androidfw/LocaleDataLookup.h
-+++ b/libs/androidfw/include/androidfw/LocaleDataLookup.h
+--- a/src/base/libs/androidfw/include/androidfw/LocaleDataLookup.h
++++ b/src/base/libs/androidfw/include/androidfw/LocaleDataLookup.h
 @@ -22,9 +22,9 @@
  
  namespace android {

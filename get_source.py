@@ -76,7 +76,6 @@ def patches():
     subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/art_stack_overflow.patch"), shell=True)
     subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/logger_write.cpp.patch"), shell=True, cwd=Path.cwd() / "src/logging")
     subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/boringssl_cxx17.patch"), shell=True, cwd=Path.cwd() / "src/boringssl")
-    subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/LocaleDataLookup.h.patch"), shell=True)
     subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/LocaleData_SCRIPT_LENGTH.patch"), shell=True)
     subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/AssetManager2_combined_iterator.patch"), shell=True, cwd=Path.cwd() / "src/base")
     pattern3 = "\'s#/usr/src/googletest#${CMAKE_SOURCE_DIR}/src/googletest#g\'"

@@ -1,7 +1,7 @@
-diff --git a/libartbase/arch/instruction_set.cc b/libartbase/arch/instruction_set.cc
+diff --git a/src/art/libartbase/arch/instruction_set.cc b/src/art/libartbase/arch/instruction_set.cc
 index 12a2c36..8728c34 100644
---- a/libartbase/arch/instruction_set.cc
-+++ b/libartbase/arch/instruction_set.cc
+--- a/src/art/libartbase/arch/instruction_set.cc
++++ b/src/art/libartbase/arch/instruction_set.cc
 @@ -118,7 +118,7 @@ std::vector<InstructionSet> GetSupportedInstructionSets(std::string* error_msg)
  namespace instruction_set_details {
  
@@ -11,10 +11,10 @@ index 12a2c36..8728c34 100644
  #endif
  
  // TODO: Should we require an extra page (RoundUp(SIZE) + gPageSize)?
-diff --git a/libartbase/arch/instruction_set.h b/libartbase/arch/instruction_set.h
+diff --git a/src/art/libartbase/arch/instruction_set.h b/src/art/libartbase/arch/instruction_set.h
 index 8b90aa5..bb160fc 100644
---- a/libartbase/arch/instruction_set.h
-+++ b/libartbase/arch/instruction_set.h
+--- a/src/art/libartbase/arch/instruction_set.h
++++ b/src/art/libartbase/arch/instruction_set.h
 @@ -236,10 +236,20 @@ std::vector<InstructionSet> GetSupportedInstructionSets(std::string* error_msg);
  
  namespace instruction_set_details {
