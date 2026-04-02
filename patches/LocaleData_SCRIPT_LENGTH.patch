@@ -1,0 +1,48 @@
+diff --git a/libs/androidfw/LocaleData.cpp b/libs/androidfw/LocaleData.cpp
+index 1b23d90c5..bcfb7f969 100644
+--- a/libs/androidfw/LocaleData.cpp
++++ b/libs/androidfw/LocaleData.cpp
+@@ -25,6 +25,8 @@
+ #include <androidfw/LocaleData.h>
+ #include <androidfw/LocaleDataLookup.h>
+ 
++size_t android::SCRIPT_LENGTH = 4;
++
+ namespace android {
+ 
+ const uint32_t PACKED_ROOT = 0; // to represent the root locale
+diff --git a/libs/androidfw/include/androidfw/LocaleDataLookup.h b/libs/androidfw/include/androidfw/LocaleDataLookup.h
+index 5a24e832b..be970f3ba 100644
+--- a/libs/androidfw/include/androidfw/LocaleDataLookup.h
++++ b/libs/androidfw/include/androidfw/LocaleDataLookup.h
+@@ -22,9 +22,9 @@
+ 
+ namespace android {
+ 
+-constexpr size_t SCRIPT_LENGTH = 4;
++extern size_t SCRIPT_LENGTH;
+ 
+-constexpr inline uint32_t packLocale(const char* language, const char* region) {
++inline uint32_t packLocale(const char* language, const char* region) {
+     const unsigned char* lang = reinterpret_cast<const unsigned char*>(language);
+     const unsigned char* reg = reinterpret_cast<const unsigned char*>(region);
+     return (static_cast<uint32_t>(lang[0]) << 24u) |
+@@ -33,15 +33,15 @@ constexpr inline uint32_t packLocale(const char* language, const char* region) {
+             static_cast<uint32_t>(reg[1]);
+ }
+ 
+-constexpr inline uint32_t dropRegion(uint32_t packed_locale) {
++inline uint32_t dropRegion(uint32_t packed_locale) {
+     return packed_locale & 0xFFFF0000LU;
+ }
+ 
+-constexpr inline bool hasRegion(uint32_t packed_locale) {
++inline bool hasRegion(uint32_t packed_locale) {
+     return (packed_locale & 0x0000FFFFLU) != 0;
+ }
+ 
+-constexpr inline uint32_t packScript(const char* script) {
++inline uint32_t packScript(const char* script) {
+     const unsigned char* s = reinterpret_cast<const unsigned char*>(script);
+     return ((static_cast<uint32_t>(s[0]) << 24u) |
+             (static_cast<uint32_t>(s[1]) << 16u) |

@@ -1,0 +1,50 @@
+diff --git a/libs/androidfw/AssetManager2.cpp b/libs/androidfw/AssetManager2.cpp
+index 0fa31c7a8..b94a88647 100644
+--- a/libs/androidfw/AssetManager2.cpp
++++ b/libs/androidfw/AssetManager2.cpp
+@@ -1697,17 +1697,36 @@ base::expected<std::monostate, NullOrIOError> Theme::ApplyStyle(uint32_t resid,
+   }
+ 
+   if (starting_size && keys_.size() != starting_size) {
+-    std::inplace_merge(
+-        CombinedIterator(keys_.begin(), entries_.begin()),
+-        CombinedIterator(keys_.begin() + starting_size, entries_.begin() + starting_size),
+-        CombinedIterator(keys_.end(), entries_.end()));
++    // Sort keys and entries together using simple selection sort to avoid swap issues
++    for (size_t i = 0; i < keys_.size(); ++i) {
++      size_t min_idx = i;
++      for (size_t j = i + 1; j < keys_.size(); ++j) {
++        if (keys_[j] < keys_[min_idx]) {
++          min_idx = j;
++        }
++      }
++      if (min_idx != i) {
++        uint32_t tmp_key = keys_[i];
++        keys_[i] = keys_[min_idx];
++        keys_[min_idx] = tmp_key;
++        Theme::Entry tmp_entry = entries_[i];
++        entries_[i] = entries_[min_idx];
++        entries_[min_idx] = tmp_entry;
++      }
++    }
+   }
+   if (wrote_undefined) {
+-    auto new_end = std::remove_if(CombinedIterator(keys_.begin(), entries_.begin()),
+-                                  CombinedIterator(keys_.end(), entries_.end()),
+-                                  [](const auto& pair) { return IsUndefined(pair.second.value); });
+-    keys_.erase(new_end.it1, keys_.end());
+-    entries_.erase(new_end.it2, entries_.end());
++    // Manual remove_if to avoid swap issues with CombinedIterator
++    size_t write_idx = 0;
++    for (size_t read_idx = 0; read_idx < keys_.size(); ++read_idx) {
++      if (!IsUndefined(entries_[read_idx].value)) {
++        keys_[write_idx] = keys_[read_idx];
++        entries_[write_idx] = entries_[read_idx];
++        ++write_idx;
++      }
++    }
++    keys_.erase(keys_.begin() + write_idx, keys_.end());
++    entries_.erase(entries_.begin() + write_idx, entries_.end());
+   }
+   if (android::base::kEnableDChecks && !std::is_sorted(keys_.begin(), keys_.end())) {
+     ALOGW("Bag %u was unsorted in the apk?", unsigned(resid));

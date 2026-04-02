@@ -1,0 +1,42 @@
+diff --git a/libartbase/arch/instruction_set.cc b/libartbase/arch/instruction_set.cc
+index 12a2c36..8728c34 100644
+--- a/libartbase/arch/instruction_set.cc
++++ b/libartbase/arch/instruction_set.cc
+@@ -118,7 +118,7 @@ std::vector<InstructionSet> GetSupportedInstructionSets(std::string* error_msg)
+ namespace instruction_set_details {
+ 
+ #if !defined(ART_FRAME_SIZE_LIMIT)
+-#error "ART frame size limit missing"
++#define ART_FRAME_SIZE_LIMIT 8000
+ #endif
+ 
+ // TODO: Should we require an extra page (RoundUp(SIZE) + gPageSize)?
+diff --git a/libartbase/arch/instruction_set.h b/libartbase/arch/instruction_set.h
+index 8b90aa5..bb160fc 100644
+--- a/libartbase/arch/instruction_set.h
++++ b/libartbase/arch/instruction_set.h
+@@ -236,10 +236,20 @@ std::vector<InstructionSet> GetSupportedInstructionSets(std::string* error_msg);
+ 
+ namespace instruction_set_details {
+ 
+-#if !defined(ART_STACK_OVERFLOW_GAP_arm) || !defined(ART_STACK_OVERFLOW_GAP_arm64) || \
+-    !defined(ART_STACK_OVERFLOW_GAP_riscv64) || \
+-    !defined(ART_STACK_OVERFLOW_GAP_x86) || !defined(ART_STACK_OVERFLOW_GAP_x86_64)
+-#error "Missing defines for stack overflow gap"
++#if !defined(ART_STACK_OVERFLOW_GAP_arm)
++#define ART_STACK_OVERFLOW_GAP_arm 8192
++#endif
++#if !defined(ART_STACK_OVERFLOW_GAP_arm64)
++#define ART_STACK_OVERFLOW_GAP_arm64 16384
++#endif
++#if !defined(ART_STACK_OVERFLOW_GAP_riscv64)
++#define ART_STACK_OVERFLOW_GAP_riscv64 16384
++#endif
++#if !defined(ART_STACK_OVERFLOW_GAP_x86)
++#define ART_STACK_OVERFLOW_GAP_x86 8192
++#endif
++#if !defined(ART_STACK_OVERFLOW_GAP_x86_64)
++#define ART_STACK_OVERFLOW_GAP_x86_64 16384
+ #endif
+ 
+ static constexpr size_t kArmStackOverflowReservedBytes     = ART_STACK_OVERFLOW_GAP_arm;
