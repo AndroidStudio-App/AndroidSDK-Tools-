@@ -1,0 +1,15 @@
+diff --git a/src/crypto/spake2plus/spake2plus.cc b/src/crypto/spake2plus/spake2plus.cc
+index c191855..ee41b20 100644
+--- a/src/crypto/spake2plus/spake2plus.cc
++++ b/src/crypto/spake2plus/spake2plus.cc
+@@ -130,8 +130,8 @@ bool ComputeTranscript(uint8_t out_prover_confirm[kConfirmSize],
+   ScalarToSizedBuffer(group, w0, w0_enc);
+ 
+   uint8_t K_main[SHA256_DIGEST_LENGTH];
+-  UpdateWithLengthPrefix(sha, Span(prover_share, kShareSize));
+-  UpdateWithLengthPrefix(sha, Span(verifier_share, kShareSize));
++  UpdateWithLengthPrefix(sha, Span<const uint8_t>(prover_share, kShareSize));
++  UpdateWithLengthPrefix(sha, Span<const uint8_t>(verifier_share, kShareSize));
+   UpdateWithLengthPrefix(sha, Z_enc);
+   UpdateWithLengthPrefix(sha, V_enc);
+   UpdateWithLengthPrefix(sha, w0_enc);

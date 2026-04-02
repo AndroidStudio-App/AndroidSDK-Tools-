@@ -1,0 +1,32 @@
+diff --git a/src/include/openssl/span.h b/src/include/openssl/span.h
+index fa77962..7013f4c 100644
+--- a/src/include/openssl/span.h
++++ b/src/include/openssl/span.h
+@@ -71,8 +71,8 @@ class SpanBase {
+ // a Span<T> by checking for data() and size() member functions.
+ template <typename C, typename T>
+ using EnableIfContainer = std::enable_if_t<
+-    std::is_convertible_v<decltype(std::declval<C>().data()), T *> &&
+-    std::is_integral_v<decltype(std::declval<C>().size())>>;
++    std::is_convertible<decltype(std::declval<C>().data()), T *>::value &&
++    std::is_integral<decltype(std::declval<C>().size())>::value>;
+ 
+ }  // namespace internal
+ 
+@@ -203,6 +203,8 @@ class Span : private internal::SpanBase<const T> {
+ template <typename T>
+ const size_t Span<T>::npos;
+ 
++// Deduction guides require C++17
++#if __cplusplus >= 201703L
+ template <typename T>
+ Span(T *, size_t) -> Span<T>;
+ template <typename T, size_t size>
+@@ -212,6 +214,7 @@ template <
+     typename T = std::remove_pointer_t<decltype(std::declval<C>().data())>,
+     typename = internal::EnableIfContainer<C, T>>
+ Span(C &) -> Span<T>;
++#endif
+ 
+ template <typename T>
+ constexpr Span<T> MakeSpan(T *ptr, size_t size) {

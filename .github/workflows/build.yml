@@ -1,0 +1,83 @@
+name: Build Android SDK Tools
+
+on:
+  workflow_dispatch:
+    inputs:
+      sdk_version:
+        description: 'SDK version tag (e.g., platform-tools-35.0.2). Leave empty for master branch'
+        required: false
+        default: ''
+      abi:
+        description: 'Target ABI'
+        required: true
+        type: choice
+        options:
+          - arm64-v8a
+          - armeabi-v7a
+          - x86
+          - x86_64
+
+env:
+  PROTOC_VERSION: '3.21.12'
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build bison flex libgmp-dev libmpfr-dev libelf-dev git
+
+      - name: Get source code
+        run: |
+          if [ -n "${{ github.event.inputs.sdk_version }}" ]; then
+            python get_source.py --tags ${{ github.event.inputs.sdk_version }}
+          else
+            python get_source.py
+          fi
+
+      - name: Setup NDK
+        run: |
+          NDK_HOME=$HOME/android-ndk
+          wget -q https://dl.google.com/android/repository/android-ndk-r29-linux.zip -O ndk.zip
+          unzip -q ndk.zip -d $HOME
+          mv $HOME/android-ndk-* $NDK_HOME
+          echo "ANDROID_NDK_HOME=$NDK_HOME" >> $GITHUB_ENV
+          echo "$NDK_HOME" >> $GITHUB_PATH
+
+      - name: Build protobuf
+        id: protoc
+        run: |
+          cd src/protobuf
+          mkdir -p build && cd build
+          cmake -GNinja -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_BUILD_PROTOC_BINARIES=ON ..
+          ninja
+          PROTOC_PATH=$(find . -name "protoc*" -type f -executable | head -1)
+          echo "path=$(pwd)/$PROTOC_PATH" >> $GITHUB_OUTPUT
+
+      - name: Build SDK Tools
+        run: |
+          python build.py \
+            --ndk=${{ env.ANDROID_NDK_HOME }} \
+            --abi=${{ github.event.inputs.abi }} \
+            --api=30 \
+            --build=build/${{ github.event.inputs.abi }} \
+            --protoc=${{ steps.protoc.outputs.path }} \
+            --job=$(nproc)
+
+      - name: Package artifacts
+        run: |
+          cd build/${{ github.event.inputs.abi }}/bin
+          zip -r ../../../android-sdk-tools-${{ github.event.inputs.abi }}-${{ github.event.inputs.sdk_version || 'master' }}.zip .
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-sdk-tools-${{ github.event.inputs.abi }}-${{ github.event.inputs.sdk_version || 'master' }}
+          path: android-sdk-tools-${{ github.event.inputs.abi }}-${{ github.event.inputs.sdk_version || 'master' }}.zip
+          retention-days: 14
