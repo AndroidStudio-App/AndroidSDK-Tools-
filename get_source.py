@@ -72,7 +72,6 @@ def patches():
     subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/task_runner.h.patch"), shell=True)
     subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/mem_map.cc.patch"), shell=True)
     subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/dex_file.cc.patch"), shell=True)
-    subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/instruction_set.h.patch"), shell=True)
     subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/art_stack_overflow.patch"), shell=True)
     subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/logger_write.cpp.patch"), shell=True, cwd=Path.cwd() / "src/logging")
     subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/boringssl_cxx17.patch"), shell=True, cwd=Path.cwd() / "src/boringssl")
