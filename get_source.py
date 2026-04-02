@@ -74,9 +74,8 @@ def patches():
     subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/dex_file.cc.patch"), shell=True)
     subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/instruction_set.h.patch"), shell=True)
     subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/logger_write.cpp.patch"), shell=True, cwd=Path.cwd() / "src/logging")
-    subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/boringssl_span.h.patch"), shell=True, cwd=Path.cwd() / "src/boringssl")
-    subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/boringssl_spake2plus.cc.patch"), shell=True, cwd=Path.cwd() / "src/boringssl")
-    subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/boringssl_internal.h.patch"), shell=True, cwd=Path.cwd() / "src/boringssl")
+    subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/boringssl_cxx17.patch"), shell=True, cwd=Path.cwd() / "src/boringssl")
+    subprocess.run("patch -p1 < {}".format(Path.cwd() / "patches/LocaleDataLookup.h.patch"), shell=True)
     pattern3 = "\'s#/usr/src/googletest#${CMAKE_SOURCE_DIR}/src/googletest#g\'"
     subprocess.run("sed -i {} {}".format(pattern3, Path.cwd() / "src/abseil-cpp/CMakeLists.txt"), shell=True)
 
