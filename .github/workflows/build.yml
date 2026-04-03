@@ -1,4 +1,4 @@
-name: Build Android SDK Tools
+name: Release Android SDK Tools
 
 on:
   workflow_dispatch:
@@ -21,8 +21,10 @@ env:
   PROTOC_VERSION: '3.21.12'
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -62,22 +64,26 @@ jobs:
 
       - name: Build SDK Tools
         run: |
+          SDK_TAG="${{ github.event.inputs.sdk_version }}"
+          if [ -z "$SDK_TAG" ]; then
+            SDK_TAG="master"
+          fi
+
           python build.py \
             --ndk=${{ env.ANDROID_NDK_HOME }} \
             --abi=${{ github.event.inputs.abi }} \
-            --api=35\
+            --api=35 \
             --build=build/${{ github.event.inputs.abi }} \
             --protoc=${{ steps.protoc.outputs.path }} \
-            --job=$(nproc)
+            --job=$(nproc) \
+            --tag="$SDK_TAG"
 
-      - name: Package artifacts
-        run: |
-          cd build/${{ github.event.inputs.abi }}/bin
-          zip -r ../../../android-sdk-tools-${{ github.event.inputs.abi }}-${{ github.event.inputs.sdk_version || 'master' }}.zip .
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: android-sdk-tools-${{ github.event.inputs.abi }}-${{ github.event.inputs.sdk_version || 'master' }}
-          path: android-sdk-tools-${{ github.event.inputs.abi }}-${{ github.event.inputs.sdk_version || 'master' }}.zip
-          retention-days: 14
+          tag_name: release-${{ github.event.inputs.sdk_version || 'master' }}-${{ github.event.inputs.abi }}
+          name: AndroidSDK-${{ github.event.inputs.sdk_version || 'master' }}
+          files: AndroidSDK-*.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

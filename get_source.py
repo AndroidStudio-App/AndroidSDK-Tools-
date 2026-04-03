@@ -93,23 +93,49 @@ def check(command):
         print("please install the {} package".format(command))
         exit()
 
+def tag_exists_in_repo(url, tag):
+    """Check if a specific tag exists in a remote repository."""
+    result = subprocess.run(
+        'git ls-remote --tags {} {}'.format(url, tag),
+        shell=True, capture_output=True, text=True
+    )
+    return len(result.stdout.strip()) > 0
+
+def clone_repo(url, path, ref, fallback='master'):
+    """Clone a repo at a specific ref, falling back to master if it doesn't exist."""
+    if not tag_exists_in_repo(url, ref):
+        print('tag {} not found in {}, falling back to {}'.format(ref, url, fallback))
+        ref = fallback
+
+    print('cloning {} -> {} @ {}'.format(url, path, ref))
+    result = subprocess.run(
+        'git clone -c advice.detachedHead=false --depth 1 --branch {} {} {}'.format(ref, url, path),
+        shell=True
+    )
+    if result.returncode != 0:
+        print('failed to clone {} with ref {}, trying {}'.format(url, ref, fallback))
+        subprocess.run(
+            'git clone -c advice.detachedHead=false --depth 1 --branch {} {} {}'.format(fallback, url, path),
+            shell=True
+        )
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--tags", default="master", help="Specify the Git cloning tags or branch")
     args = parser.parse_args()
-    
+
     # check necessary packages
     check("git")
     check("go")
     check("bison")
     check("flex")
-    
+
     # git clone submodules
     with open('repos.json', 'r') as file:
         repos = json.load(file)
     for repo in repos:
         if not Path(repo['path']).exists():
-            subprocess.run('git clone -c advice.detachedHead=false --depth 1 --branch {} {} {}'.format(args.tags, repo['url'], repo['path']), shell=True)
+            clone_repo(repo['url'], repo['path'], args.tags)
     
     # patch files
     patches()

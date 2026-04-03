@@ -17,6 +17,7 @@
 # pylint: disable=not-callable, line-too-long, no-else-return
 
 import os
+import re
 import time
 import shutil
 import argparse
@@ -51,50 +52,160 @@ def package(srcPathName, destPathName):
             zip.write(os.path.join(path, filename), os.path.join(fpath, filename))            
     zip.close()
 
+# generate package.xml for build-tools
+def gen_build_tools_package_xml(version):
+    parts = version.split('.')
+    major = parts[0] if len(parts) > 0 else '0'
+    minor = parts[1] if len(parts) > 1 else '0'
+    micro = parts[2] if len(parts) > 2 else '0'
+
+    return '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:repository
+    xmlns:ns2="http://schemas.android.com/repository/android/common/02"
+    xmlns:ns3="http://schemas.android.com/repository/android/common/01"
+    xmlns:ns4="http://schemas.android.com/repository/android/generic/01"
+    xmlns:ns5="http://schemas.android.com/repository/android/generic/02"
+    xmlns:ns6="http://schemas.android.com/sdk/android/repo/addon2/01"
+    xmlns:ns7="http://schemas.android.com/sdk/android/repo/addon2/02"
+    xmlns:ns8="http://schemas.android.com/sdk/android/repo/repository2/01"
+    xmlns:ns9="http://schemas.android.com/sdk/android/repo/repository2/02"
+    xmlns:ns10="http://schemas.android.com/sdk/android/repo/sys-img2/02"
+    xmlns:ns11="http://schemas.android.com/sdk/android/repo/sys-img2/01">
+    <license id="android-sdk-license" type="text">Terms and Conditions</license>
+    <localPackage path="build-tools;{version}" obsolete="false">
+        <type-details xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns5:genericDetailsType"/>
+        <revision>
+            <major>{major}</major>
+            <minor>{minor}</minor>
+            <micro>{micro}</micro>
+        </revision>
+        <display-name>Android SDK Build-Tools {version}</display-name>
+        <uses-license ref="android-sdk-license"/>
+    </localPackage>
+</ns2:repository>'''.format(version=version, major=major, minor=minor, micro=micro)
+
+# generate package.xml for platform-tools
+def gen_platform_tools_package_xml(version):
+    parts = version.split('.')
+    major = parts[0] if len(parts) > 0 else '0'
+    minor = parts[1] if len(parts) > 1 else '0'
+    micro = parts[2] if len(parts) > 2 else '0'
+
+    return '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:repository
+    xmlns:ns2="http://schemas.android.com/repository/android/common/02"
+    xmlns:ns3="http://schemas.android.com/repository/android/common/01"
+    xmlns:ns4="http://schemas.android.com/repository/android/generic/01"
+    xmlns:ns5="http://schemas.android.com/repository/android/generic/02"
+    xmlns:ns6="http://schemas.android.com/sdk/android/repo/addon2/01"
+    xmlns:ns7="http://schemas.android.com/sdk/android/repo/addon2/02"
+    xmlns:ns8="http://schemas.android.com/sdk/android/repo/repository2/01"
+    xmlns:ns9="http://schemas.android.com/sdk/android/repo/repository2/02"
+    xmlns:ns10="http://schemas.android.com/sdk/android/repo/sys-img2/02"
+    xmlns:ns11="http://schemas.android.com/sdk/android/repo/sys-img2/01">
+    <license id="android-sdk-license" type="text">Terms and Conditions</license>
+    <localPackage path="platform-tools" obsolete="false">
+        <type-details xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns5:genericDetailsType"/>
+        <revision>
+            <major>{major}</major>
+            <minor>{minor}</minor>
+            <micro>{micro}</micro>
+        </revision>
+        <display-name>Android SDK Platform-Tools</display-name>
+        <uses-license ref="android-sdk-license"/>
+    </localPackage>
+</ns2:repository>'''.format(version=version, major=major, minor=minor, micro=micro)
+
+# generate source.properties
+def gen_source_properties(desc, revision, pkg_path):
+    return 'Pkg.Desc = {}\nPkg.Revision = {}\nPkg.Path = {}\nPkg.UserSrc = false\n'.format(
+        desc, revision, pkg_path)
+
+# parse SDK version from tag like "platform-tools-35.0.2" -> "35.0.2"
+def parse_version(tag):
+    if not tag:
+        return '35.0.0'
+    match = re.search(r'(\d+\.\d+\.\d+)', tag)
+    if match:
+        return match.group(1)
+    return '35.0.0'
+
 # build finish
 def complete(args):
-    # binaries output dir
+    sdk_version = parse_version(args.tag)
     binary_dir = Path.cwd() / args.build / 'bin'
-    
-    # ndk llvm-strip
-    strip = Path(args.ndk) / 'toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip'
-    
+    staging_dir = Path.cwd() / args.build / 'staging'
+
     # arch maps
     arch = {
-        'arm64-v8a' : 'aarch64', 
-        'armeabi-v7a' : 'arm', 
-        'x86_64' : 'x86_64', 
-        'x86' : 'i686'
+        'arm64-v8a': 'aarch64',
+        'armeabi-v7a': 'arm',
+        'x86_64': 'x86_64',
+        'x86': 'i686'
     }
-    
+
+    # ndk llvm-strip
+    strip = Path(args.ndk) / 'toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip'
+
     # the android tools list
-    build_tools = ['aapt', 'aapt2', 'aidl', 'zipalign', 'dexdump', 'split-select']
-    
-    platform_tools = [
+    build_tools_bin = ['aapt', 'aapt2', 'aidl', 'zipalign', 'dexdump', 'split-select']
+    platform_tools_bin = [
         'adb', 'fastboot', 'sqlite3', 'etc1tool', 'hprof-conv',
         'e2fsdroid', 'sload_f2fs', 'mke2fs', 'make_f2fs', 'make_f2fs_casefold'
     ]
-    
     other_tools = ['veridex']
-    
-    android_tools = {
-        binary_dir / 'build-tools' : build_tools,
-        binary_dir / 'platform-tools' : platform_tools,
-        binary_dir / 'others' : other_tools
-    }
-    
-    # strip debug symbol for android tools
-    for (tooldir, tools) in android_tools.items():
-        if not tooldir.exists():
-            tooldir.mkdir()
-        for tool in tools:
-            if Path(binary_dir / tool).exists():
-                shutil.copy2(binary_dir / tool, tooldir)
-                os.remove(binary_dir / tool)
-                subprocess.run('{} -g {}'.format(strip, tooldir / tool), shell=True)
-    
-    # package build tools as a zip file
-    package(str(binary_dir), str(binary_dir.parent / 'android-sdk-tools-{}.zip'.format(arch[args.abi])))
+
+    # staging directory structure
+    build_tools_dir = staging_dir / 'build-tools' / sdk_version
+    platform_tools_dir = staging_dir / 'platform-tools'
+    others_dir = staging_dir / 'others'
+
+    for d in [build_tools_dir, platform_tools_dir, others_dir]:
+        d.mkdir(parents=True, exist_ok=True)
+
+    # copy and strip build-tools
+    for tool in build_tools_bin:
+        src = binary_dir / tool
+        if src.exists():
+            dst = build_tools_dir / tool
+            shutil.copy2(src, dst)
+            os.remove(src)
+            subprocess.run('{} -g {}'.format(strip, dst), shell=True)
+
+    # copy and strip platform-tools
+    for tool in platform_tools_bin:
+        src = binary_dir / tool
+        if src.exists():
+            dst = platform_tools_dir / tool
+            shutil.copy2(src, dst)
+            os.remove(src)
+            subprocess.run('{} -g {}'.format(strip, dst), shell=True)
+
+    # copy and strip others
+    for tool in other_tools:
+        src = binary_dir / tool
+        if src.exists():
+            dst = others_dir / tool
+            shutil.copy2(src, dst)
+            os.remove(src)
+            subprocess.run('{} -g {}'.format(strip, dst), shell=True)
+
+    # write package.xml and source.properties for build-tools
+    (build_tools_dir / 'package.xml').write_text(gen_build_tools_package_xml(sdk_version))
+    (build_tools_dir / 'source.properties').write_text(
+        gen_source_properties('Android SDK Build-Tools {}'.format(sdk_version), sdk_version,
+                              'build-tools;{}'.format(sdk_version)))
+
+    # write package.xml and source.properties for platform-tools
+    (platform_tools_dir / 'package.xml').write_text(gen_platform_tools_package_xml(sdk_version))
+    (platform_tools_dir / 'source.properties').write_text(
+        gen_source_properties('Android SDK Platform-Tools', sdk_version, 'platform-tools'))
+
+    # package as AndroidSDK-VERSION.zip
+    zip_name = 'AndroidSDK-{}.zip'.format(sdk_version)
+    zip_path = Path.cwd() / zip_name
+    package(str(staging_dir), str(zip_path))
+    print('\033[1;32mpackaged to {}\033[0m'.format(zip_path))
     
 # start building
 def build(args):
@@ -154,7 +265,8 @@ def main():
     parser.add_argument('--target', default='all', help='build specified targets such as aapt2 adb fastboot, etc')
     
     parser.add_argument('--protoc', help='set the host protoc path')
-    
+    parser.add_argument('--tag', default='master', help='SDK version tag for packaging (e.g., platform-tools-35.0.2)')
+
     args = parser.parse_args()
 
     build(args)
