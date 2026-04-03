@@ -82,7 +82,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: release-${{ github.event.inputs.sdk_version || 'master' }}-${{ github.event.inputs.abi }}
-          name: AndroidSDK-${{ github.event.inputs.sdk_version || 'master' }}
+          name: AndroidSDK-${{ github.event.inputs.sdk_version || 'master' }}-${{ github.event.inputs.abi }}
           files: AndroidSDK-*.zip
           generate_release_notes: true
         env:
